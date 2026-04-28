@@ -23,11 +23,16 @@ export function PollList() {
 
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-subtle">
-          Polls
+      <div className="flex items-baseline justify-between gap-4">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-accent-bright/80">
+            Open Polls
+          </div>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-[1.65rem]">
+            Cast your weight
+          </h2>
         </div>
-        <div className="flex gap-1 rounded-full border border-border bg-white/5 p-0.5">
+        <div className="flex gap-1 self-end rounded-full border border-white/15 bg-white/5 p-0.5 backdrop-blur">
           {(["active", "closed", "all"] as Filter[]).map((f) => (
             <button
               key={f}
@@ -44,21 +49,21 @@ export function PollList() {
         </div>
       </div>
 
-      <div className="mt-3 space-y-3">
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {isLoading ? (
-          <div className="space-y-3">
-            <div className="h-44 animate-pulse rounded-2xl bg-white/5" />
-            <div className="h-44 animate-pulse rounded-2xl bg-white/5" />
-          </div>
+          <>
+            <div className="h-56 animate-pulse rounded-2xl bg-white/5" />
+            <div className="h-56 animate-pulse rounded-2xl bg-white/5" />
+          </>
         ) : isError ? (
-          <div className="glass p-5 text-sm text-danger">
+          <div className="glass p-5 text-sm text-danger sm:col-span-2">
             Failed to load polls. Soroban RPC may be rate-limited; try again in a
             moment.
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass p-5 text-sm text-muted">
+          <div className="glass p-8 text-center text-sm text-muted sm:col-span-2">
             {filter === "active"
-              ? "No active polls. Be the first to start one above."
+              ? "No active polls right now. Use the panel on the right to start one."
               : filter === "closed"
                 ? "No closed polls yet."
                 : "No polls have been created yet."}
