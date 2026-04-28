@@ -19,7 +19,7 @@ Stake Belt runs stake-weighted polls on Soroban with quadratic vote math, so dou
 ## See It
 
 - Live demo: https://stake-belt.vercel.app
-- Demo video: https://youtu.be/REPLACE_ME
+- Demo video: https://drive.google.com/drive/folders/1U15yJjJtt7SWjV-SDE7k2zQckobT_rfo?usp=sharing
 - Main contract on Stellar Expert: https://stellar.expert/explorer/testnet/contract/CBJACPWJUNREES7DWVS2PISPP6ICLVPZQPDJAGTLY2CDYG44AUFIZ5BV
 - Native XLM SAC: https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC (testnet built-in)
 
@@ -70,6 +70,8 @@ npm run dev                               # http://localhost:3002
 - `rejects_empty_question`
 - `rejects_empty_option_label`
 - `rejects_too_few_or_too_many_options`
+<img width="669" height="184" alt="image" src="https://github.com/user-attachments/assets/e0336af5-d35d-4d68-873d-b4247baa320a" />
+
 
 </details>
 
@@ -77,7 +79,7 @@ npm run dev                               # http://localhost:3002
 
 | Desktop | Mobile |
 |---------|--------|
-| ![desktop](docs/desktop.png) | ![mobile](docs/mobile.png) |
+| <img width="1262" height="709" alt="image" src="https://github.com/user-attachments/assets/3fe4476b-6c1b-4a17-bc70-91dbeec0b72c" />| <img width="397" height="627" alt="image" src="https://github.com/user-attachments/assets/c707eb72-509d-486b-a2d5-ccf7cde49847" />|
 
 ## Notes
 
