@@ -4,7 +4,7 @@ use super::{Error, PollHub, PollHubClient};
 use soroban_sdk::{
     testutils::{Address as _, Ledger as _},
     token::{StellarAssetClient, TokenClient},
-    Address, Env, String,
+    vec, Address, Env, String, Vec,
 };
 
 struct Ctx<'a> {
@@ -45,15 +45,28 @@ fn bump_time(env: &Env, by: u64) {
     });
 }
 
+fn opts2(env: &Env, a: &str, b: &str) -> Vec<String> {
+    vec![env, String::from_str(env, a), String::from_str(env, b)]
+}
+fn opts3(env: &Env, a: &str, b: &str, c: &str) -> Vec<String> {
+    vec![
+        env,
+        String::from_str(env, a),
+        String::from_str(env, b),
+        String::from_str(env, c),
+    ]
+}
+
 #[test]
 fn create_then_vote_records_quadratic_weight() {
     let ctx = setup();
     let creator = Address::generate(&ctx.env);
     let voter = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "tabs or spaces?");
+    let labels = opts3(&ctx.env, "tabs", "spaces", "neither");
 
     fund(&ctx, &voter, 200_000_000);
-    let id = ctx.poll.create_poll(&creator, &q, &3, &600);
+    let id = ctx.poll.create_poll(&creator, &q, &labels, &600);
     assert_eq!(id, 1);
 
     let weight = ctx.poll.cast_vote(&voter, &1, &0, &100_000_000);
@@ -76,6 +89,9 @@ fn create_then_vote_records_quadratic_weight() {
     let poll = ctx.poll.get_poll(&1).unwrap();
     assert_eq!(poll.total_voters, 1);
     assert_eq!(poll.finalized, false);
+    assert_eq!(poll.options.len(), 3);
+    assert_eq!(poll.options.get(0).unwrap(), String::from_str(&ctx.env, "tabs"));
+    assert_eq!(poll.options.get(1).unwrap(), String::from_str(&ctx.env, "spaces"));
 }
 
 #[test]
@@ -86,12 +102,13 @@ fn multiple_votes_accumulate_per_option() {
     let bob = Address::generate(&ctx.env);
     let carol = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "favorite color?");
+    let labels = opts3(&ctx.env, "red", "blue", "green");
 
     fund(&ctx, &alice, 400_000_000);
     fund(&ctx, &bob, 100_000_000);
     fund(&ctx, &carol, 900_000_000);
 
-    ctx.poll.create_poll(&creator, &q, &3, &600);
+    ctx.poll.create_poll(&creator, &q, &labels, &600);
 
     ctx.poll.cast_vote(&alice, &1, &0, &400_000_000); // weight 20_000
     ctx.poll.cast_vote(&bob, &1, &1, &100_000_000); // weight 10_000
@@ -128,10 +145,11 @@ fn cannot_vote_twice_in_same_poll() {
     let creator = Address::generate(&ctx.env);
     let voter = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "noon or midnight?");
+    let labels = opts2(&ctx.env, "noon", "midnight");
 
     fund(&ctx, &voter, 1_000_000_000);
 
-    ctx.poll.create_poll(&creator, &q, &2, &600);
+    ctx.poll.create_poll(&creator, &q, &labels, &600);
     ctx.poll.cast_vote(&voter, &1, &0, &50_000_000);
 
     let result = ctx.poll.try_cast_vote(&voter, &1, &1, &100_000_000);
@@ -160,13 +178,14 @@ fn finalize_picks_highest_quadratic_weight() {
     let small_b = Address::generate(&ctx.env);
     let small_c = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "which proposal?");
+    let labels = opts2(&ctx.env, "proposal A", "proposal B");
 
     fund(&ctx, &whale, 900_000_000);
     fund(&ctx, &small_a, 160_000_000);
     fund(&ctx, &small_b, 160_000_000);
     fund(&ctx, &small_c, 160_000_000);
 
-    ctx.poll.create_poll(&creator, &q, &2, &600);
+    ctx.poll.create_poll(&creator, &q, &labels, &600);
 
     ctx.poll.cast_vote(&whale, &1, &0, &900_000_000); // weight 30_000
     ctx.poll.cast_vote(&small_a, &1, &1, &160_000_000); // weight 12_649
@@ -193,10 +212,11 @@ fn release_stake_only_after_finalize() {
     let creator = Address::generate(&ctx.env);
     let voter = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "release me?");
+    let labels = opts2(&ctx.env, "yes", "no");
 
     fund(&ctx, &voter, 81_000_000);
 
-    ctx.poll.create_poll(&creator, &q, &2, &600);
+    ctx.poll.create_poll(&creator, &q, &labels, &600);
     ctx.poll.cast_vote(&voter, &1, &0, &81_000_000);
 
     // mid-poll the voter has been drained
@@ -231,12 +251,61 @@ fn vote_after_deadline_fails() {
     let creator = Address::generate(&ctx.env);
     let late = Address::generate(&ctx.env);
     let q = String::from_str(&ctx.env, "too late?");
+    let labels = opts2(&ctx.env, "yes", "no");
 
     fund(&ctx, &late, 10_000_000);
 
-    ctx.poll.create_poll(&creator, &q, &2, &60);
+    ctx.poll.create_poll(&creator, &q, &labels, &60);
     bump_time(&ctx.env, 120);
 
     let result = ctx.poll.try_cast_vote(&late, &1, &0, &10_000_000);
     assert!(matches!(result, Err(Ok(Error::PollClosed))));
+}
+
+#[test]
+fn rejects_empty_question() {
+    let ctx = setup();
+    let creator = Address::generate(&ctx.env);
+    let q = String::from_str(&ctx.env, "");
+    let labels = opts2(&ctx.env, "yes", "no");
+
+    let result = ctx.poll.try_create_poll(&creator, &q, &labels, &600);
+    assert!(matches!(result, Err(Ok(Error::QuestionEmpty))));
+}
+
+#[test]
+fn rejects_empty_option_label() {
+    let ctx = setup();
+    let creator = Address::generate(&ctx.env);
+    let q = String::from_str(&ctx.env, "real q?");
+    let labels = opts2(&ctx.env, "yes", "");
+
+    let result = ctx.poll.try_create_poll(&creator, &q, &labels, &600);
+    assert!(matches!(result, Err(Ok(Error::OptionTextEmpty))));
+}
+
+#[test]
+fn rejects_too_few_or_too_many_options() {
+    let ctx = setup();
+    let creator = Address::generate(&ctx.env);
+    let q = String::from_str(&ctx.env, "ok?");
+
+    // one option
+    let one = vec![&ctx.env, String::from_str(&ctx.env, "yes")];
+    let r1 = ctx.poll.try_create_poll(&creator, &q, &one, &600);
+    assert!(matches!(r1, Err(Ok(Error::InvalidNumOptions))));
+
+    // seven options
+    let seven = vec![
+        &ctx.env,
+        String::from_str(&ctx.env, "a"),
+        String::from_str(&ctx.env, "b"),
+        String::from_str(&ctx.env, "c"),
+        String::from_str(&ctx.env, "d"),
+        String::from_str(&ctx.env, "e"),
+        String::from_str(&ctx.env, "f"),
+        String::from_str(&ctx.env, "g"),
+    ];
+    let r7 = ctx.poll.try_create_poll(&creator, &q, &seven, &600);
+    assert!(matches!(r7, Err(Ok(Error::InvalidNumOptions))));
 }

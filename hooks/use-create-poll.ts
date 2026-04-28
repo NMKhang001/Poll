@@ -6,14 +6,14 @@ import {
   invokeContract,
   addrArg,
   strArg,
-  u32Arg,
   u64Arg,
+  vecStrArg,
 } from "@/lib/soroban";
 import { StellarWalletsKit } from "@/lib/wallets";
 
 type Input = {
   question: string;
-  numOptions: number;
+  options: string[];
   windowSecs: number;
 };
 
@@ -38,7 +38,7 @@ export function useCreatePoll(address: string | null) {
         args: [
           addrArg(address),
           strArg(input.question),
-          u32Arg(input.numOptions),
+          vecStrArg(input.options),
           u64Arg(input.windowSecs),
         ],
         source: address,

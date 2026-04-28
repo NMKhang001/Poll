@@ -7,7 +7,7 @@ export type Poll = {
   id: number;
   creator: string;
   question: string;
-  num_options: number;
+  options: string[];
   deadline: bigint;
   finalized: boolean;
   winner: number;
@@ -75,7 +75,7 @@ export function usePolls() {
       const out: PollWithTallies[] = [];
       for (const p of polls) {
         if (!p) continue;
-        const tallyCalls = Array.from({ length: p.num_options }, (_, i) =>
+        const tallyCalls = Array.from({ length: p.options.length }, (_, i) =>
           readContract<Tally>({
             contractId: MAIN,
             method: "get_tally",

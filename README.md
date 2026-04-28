@@ -4,7 +4,7 @@ Quadratic polls on Stellar Testnet, where small voters can outweigh whales.
 
 Stake Belt runs stake-weighted polls on Soroban with quadratic vote math, so doubling your stake gives you only about 1.41x more voice. Stakes lock for the voting window, anyone can finalize once the deadline passes, and voters auto-release their own stake on chain.
 
-[![CI](https://github.com/NMKhang001/03-poll/actions/workflows/ci.yml/badge.svg)](https://github.com/NMKhang001/03-poll/actions/workflows/ci.yml)
+[![CI](https://github.com/NMKhang001/Poll/actions/workflows/ci.yml/badge.svg)](https://github.com/NMKhang001/Poll/actions/workflows/ci.yml)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B3FFA)
 [Live Demo](https://stake-belt.vercel.app)
 
@@ -20,7 +20,7 @@ Stake Belt runs stake-weighted polls on Soroban with quadratic vote math, so dou
 
 - Live demo: https://stake-belt.vercel.app
 - Demo video: https://youtu.be/REPLACE_ME
-- Main contract on Stellar Expert: https://stellar.expert/explorer/testnet/contract/CCKCNLTNPRBQAU564NTTQTPYGJNBYUAB33H6X7D2TL2W5LPFYLXIHWDK
+- Main contract on Stellar Expert: https://stellar.expert/explorer/testnet/contract/CBJACPWJUNREES7DWVS2PISPP6ICLVPZQPDJAGTLY2CDYG44AUFIZ5BV
 - Native XLM SAC: https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC (testnet built-in)
 
 ## How It Works
@@ -56,7 +56,7 @@ npm run dev                               # http://localhost:3002
 
 ## Tests
 
-6 cargo tests on the poll contract, run via `cargo test` in `contract/`.
+9 cargo tests on the poll contract, run via `cargo test` in `contract/`.
 
 <details>
 <summary>Test list</summary>
@@ -67,6 +67,9 @@ npm run dev                               # http://localhost:3002
 - `finalize_picks_highest_quadratic_weight`
 - `release_stake_only_after_finalize`
 - `vote_after_deadline_fails`
+- `rejects_empty_question`
+- `rejects_empty_option_label`
+- `rejects_too_few_or_too_many_options`
 
 </details>
 

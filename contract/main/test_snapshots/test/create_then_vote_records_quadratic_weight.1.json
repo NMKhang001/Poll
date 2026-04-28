@@ -65,7 +65,17 @@
                   "string": "tabs or spaces?"
                 },
                 {
-                  "u32": 3
+                  "vec": [
+                    {
+                      "string": "tabs"
+                    },
+                    {
+                      "string": "spaces"
+                    },
+                    {
+                      "string": "neither"
+                    }
+                  ]
                 },
                 {
                   "u64": 600
@@ -313,10 +323,20 @@
                     },
                     {
                       "key": {
-                        "symbol": "num_options"
+                        "symbol": "options"
                       },
                       "val": {
-                        "u32": 3
+                        "vec": [
+                          {
+                            "string": "tabs"
+                          },
+                          {
+                            "string": "spaces"
+                          },
+                          {
+                            "string": "neither"
+                          }
+                        ]
                       }
                     },
                     {

@@ -44,6 +44,7 @@ export type ReleaseEvent = {
 
 export type CreatedEvent = {
   kind: "created";
+  options?: string[];
   id: string;
   ledger: number;
   ledgerClosedAt: string;
@@ -150,14 +151,25 @@ function decodeEvent(e: rpc.Api.EventResponse): ContractEvent | null {
     }
     if (topicSym === CREATED_TOPIC) {
       const creator = scValToNative(e.topic[1]) as string;
-      const value = scValToNative(e.value) as [number, string, number, bigint];
+      const value = scValToNative(e.value) as [
+        number,
+        string,
+        string[] | number,
+        bigint,
+      ];
+      const optsOrCount = value[2];
+      const options = Array.isArray(optsOrCount)
+        ? optsOrCount.map((s) => String(s))
+        : undefined;
+      const numOptions = options ? options.length : Number(optsOrCount);
       return {
         ...base,
         kind: "created",
         creator,
         pollId: Number(value[0]),
         question: String(value[1]),
-        numOptions: Number(value[2]),
+        numOptions,
+        options,
         deadline: BigInt(value[3]),
       };
     }

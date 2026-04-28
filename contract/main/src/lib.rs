@@ -1,7 +1,8 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, String,
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env,
+    String, Vec,
 };
 
 #[contracterror]
@@ -21,6 +22,8 @@ pub enum Error {
     InvalidNumOptions = 11,
     WindowMustBePositive = 12,
     NotInitialized = 13,
+    QuestionEmpty = 14,
+    OptionTextEmpty = 15,
 }
 
 #[contracttype]
@@ -29,7 +32,7 @@ pub struct Poll {
     pub id: u32,
     pub creator: Address,
     pub question: String,
-    pub num_options: u32,
+    pub options: Vec<String>,
     pub deadline: u64,
     pub finalized: bool,
     pub winner: u32,
@@ -97,12 +100,22 @@ impl PollHub {
         env: Env,
         creator: Address,
         question: String,
-        num_options: u32,
+        options: Vec<String>,
         voting_window_secs: u64,
     ) -> Result<u32, Error> {
         creator.require_auth();
-        if num_options < 2 || num_options > 6 {
+        if question.len() == 0 {
+            return Err(Error::QuestionEmpty);
+        }
+        let n = options.len();
+        if n < 2 || n > 6 {
             return Err(Error::InvalidNumOptions);
+        }
+        for i in 0..n {
+            let label = options.get(i).unwrap();
+            if label.len() == 0 {
+                return Err(Error::OptionTextEmpty);
+            }
         }
         if voting_window_secs == 0 {
             return Err(Error::WindowMustBePositive);
@@ -120,7 +133,7 @@ impl PollHub {
             id,
             creator: creator.clone(),
             question: question.clone(),
-            num_options,
+            options: options.clone(),
             deadline,
             finalized: false,
             winner: 0,
@@ -131,7 +144,7 @@ impl PollHub {
 
         env.events().publish(
             (symbol_short!("created"), creator),
-            (id, question, num_options, deadline),
+            (id, question, options, deadline),
         );
         Ok(id)
     }
@@ -154,7 +167,7 @@ impl PollHub {
             .get(&DataKey::Poll(poll_id))
             .ok_or(Error::PollNotFound)?;
 
-        if option_idx >= poll.num_options {
+        if option_idx >= poll.options.len() {
             return Err(Error::OptionOutOfRange);
         }
         if env.ledger().timestamp() >= poll.deadline {
@@ -220,7 +233,8 @@ impl PollHub {
 
         let mut winner = 0u32;
         let mut best: u128 = 0;
-        for i in 0..poll.num_options {
+        let n = poll.options.len();
+        for i in 0..n {
             let t: Tally = env
                 .storage()
                 .persistent()

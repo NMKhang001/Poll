@@ -140,7 +140,14 @@
                   "string": "which proposal?"
                 },
                 {
-                  "u32": 2
+                  "vec": [
+                    {
+                      "string": "proposal A"
+                    },
+                    {
+                      "string": "proposal B"
+                    }
+                  ]
                 },
                 {
                   "u64": 600
@@ -651,10 +658,17 @@
                     },
                     {
                       "key": {
-                        "symbol": "num_options"
+                        "symbol": "options"
                       },
                       "val": {
-                        "u32": 2
+                        "vec": [
+                          {
+                            "string": "proposal A"
+                          },
+                          {
+                            "string": "proposal B"
+                          }
+                        ]
                       }
                     },
                     {

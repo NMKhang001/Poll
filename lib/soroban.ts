@@ -42,6 +42,10 @@ export function strArg(s: string): ScArg {
   return nativeToScVal(s, { type: "string" });
 }
 
+export function vecStrArg(items: string[]): ScArg {
+  return xdr.ScVal.scvVec(items.map((s) => strArg(s)));
+}
+
 export async function invokeContract(opts: {
   contractId: string;
   method: string;
@@ -61,16 +65,29 @@ export async function invokeContract(opts: {
 
   const sim = await sorobanRpc.simulateTransaction(tx);
   if (rpc.Api.isSimulationError(sim)) {
-    throw new Error(sim.error);
+    console.error("[soroban] simulation error:", sim);
+    throw new Error(`simulation failed: ${sim.error}`);
   }
 
   const prepared = rpc.assembleTransaction(tx, sim).build();
-  const signedXdr = await opts.signXdr(prepared.toXDR());
+
+  let signedXdr: string;
+  try {
+    signedXdr = await opts.signXdr(prepared.toXDR());
+  } catch (e) {
+    console.error("[soroban] signing error:", e);
+    throw e;
+  }
   const signed = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
 
   const sendRes = await sorobanRpc.sendTransaction(signed);
   if (sendRes.status === "ERROR") {
-    throw new Error(`send failed: ${JSON.stringify(sendRes.errorResult)}`);
+    console.error("[soroban] sendTransaction error:", sendRes);
+    throw new Error(
+      `send failed: ${
+        sendRes.errorResult ? JSON.stringify(sendRes.errorResult) : sendRes.status
+      }`
+    );
   }
   const hash = sendRes.hash;
 
@@ -82,7 +99,8 @@ export async function invokeContract(opts: {
     tries++;
   }
   if (result.status === "FAILED") {
-    throw new Error("contract call failed on chain");
+    console.error("[soroban] tx failed on chain:", result);
+    throw new Error(`contract call failed on chain (tx ${hash})`);
   }
   return { hash };
 }

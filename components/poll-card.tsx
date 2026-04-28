@@ -20,7 +20,7 @@ import {
 
 const EXPLORER = "https://stellar.expert/explorer/testnet/tx";
 
-const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
+const OPTION_KEYS = ["A", "B", "C", "D", "E", "F"];
 
 function fmtStake(stroops: bigint) {
   return (Number(stroops) / 1e7).toFixed(4).replace(/\.?0+$/, "");
@@ -89,7 +89,7 @@ export function PollCard({ data }: { data: PollWithTallies }) {
         stake,
       });
       qc.invalidateQueries({ queryKey: ["polls"] });
-      qc.invalidateQueries({ queryKey: ["my-vote", undefined, poll.id] });
+      qc.invalidateQueries({ queryKey: ["my-vote"] });
       qc.invalidateQueries({ queryKey: ["events"] });
       qc.invalidateQueries({ queryKey: ["balance", address] });
     } catch {
@@ -110,7 +110,7 @@ export function PollCard({ data }: { data: PollWithTallies }) {
   async function onRelease() {
     try {
       await release.mutateAsync(poll.id);
-      qc.invalidateQueries({ queryKey: ["my-vote", undefined, poll.id] });
+      qc.invalidateQueries({ queryKey: ["my-vote"] });
       qc.invalidateQueries({ queryKey: ["polls"] });
       qc.invalidateQueries({ queryKey: ["events"] });
     } catch {
@@ -159,6 +159,7 @@ export function PollCard({ data }: { data: PollWithTallies }) {
           <OptionRow
             key={i}
             idx={i}
+            label={poll.options[i] ?? `Option ${OPTION_KEYS[i] ?? i}`}
             tally={t}
             totalWeight={totalWeight}
             totalStake={totalStake}
@@ -191,7 +192,7 @@ export function PollCard({ data }: { data: PollWithTallies }) {
             >
               {send.isPending
                 ? "Submitting..."
-                : `Stake ${stake || "0"} XLM on ${OPTION_LABELS[selected]}`}
+                : `Stake ${stake || "0"} XLM on ${poll.options[selected] ?? OPTION_KEYS[selected]}`}
             </button>
           </div>
           <div className="text-xs text-muted">
@@ -208,9 +209,11 @@ export function PollCard({ data }: { data: PollWithTallies }) {
 
       {!closed && myVote && (
         <div className="mt-4 rounded-md border border-accent/30 bg-accent/10 p-3 text-xs text-accent-bright">
-          You staked {fmtStake(myVote.stake)} XLM on option{" "}
-          {OPTION_LABELS[myVote.option_idx]} (weight{" "}
-          {Number(myVote.weight).toLocaleString()}).
+          You staked {fmtStake(myVote.stake)} XLM on{" "}
+          <span className="font-semibold">
+            {poll.options[myVote.option_idx] ?? OPTION_KEYS[myVote.option_idx]}
+          </span>{" "}
+          (weight {Number(myVote.weight).toLocaleString()}).
         </div>
       )}
 
@@ -308,6 +311,7 @@ export function PollCard({ data }: { data: PollWithTallies }) {
 
 function OptionRow({
   idx,
+  label,
   tally,
   totalWeight,
   totalStake,
@@ -318,6 +322,7 @@ function OptionRow({
   onSelect,
 }: {
   idx: number;
+  label: string;
   tally: Tally;
   totalWeight: number;
   totalStake: number;
@@ -353,11 +358,9 @@ function OptionRow({
         <div className="flex items-baseline justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-full border border-accent/50 bg-accent/15 font-mono text-[11px] text-accent-bright">
-              {OPTION_LABELS[idx]}
+              {OPTION_KEYS[idx] ?? idx}
             </span>
-            <span className="text-sm font-medium">
-              Option {OPTION_LABELS[idx]}
-            </span>
+            <span className="break-words text-sm font-medium">{label}</span>
             {isWinner && (
               <span className="rounded-full border border-success/50 bg-success/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-success">
                 Won

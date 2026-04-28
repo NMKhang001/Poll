@@ -65,7 +65,14 @@
                   "string": "release me?"
                 },
                 {
-                  "u32": 2
+                  "vec": [
+                    {
+                      "string": "yes"
+                    },
+                    {
+                      "string": "no"
+                    }
+                  ]
                 },
                 {
                   "u64": 600
@@ -338,10 +345,17 @@
                     },
                     {
                       "key": {
-                        "symbol": "num_options"
+                        "symbol": "options"
                       },
                       "val": {
-                        "u32": 2
+                        "vec": [
+                          {
+                            "string": "yes"
+                          },
+                          {
+                            "string": "no"
+                          }
+                        ]
                       }
                     },
                     {

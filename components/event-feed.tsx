@@ -137,9 +137,12 @@ function Detail({ e }: { e: ContractEvent }) {
     );
   }
   if (e.kind === "created") {
+    const labels = e.options?.length
+      ? e.options.join(" / ")
+      : `${e.numOptions} options`;
     return (
       <div className="mt-1 truncate text-xs text-muted">
-        &ldquo;{e.question}&rdquo; · {e.numOptions} options
+        &ldquo;{e.question}&rdquo; · {labels}
       </div>
     );
   }

@@ -115,7 +115,17 @@
                   "string": "favorite color?"
                 },
                 {
-                  "u32": 3
+                  "vec": [
+                    {
+                      "string": "red"
+                    },
+                    {
+                      "string": "blue"
+                    },
+                    {
+                      "string": "green"
+                    }
+                  ]
                 },
                 {
                   "u64": 600
@@ -542,10 +552,20 @@
                     },
                     {
                       "key": {
-                        "symbol": "num_options"
+                        "symbol": "options"
                       },
                       "val": {
-                        "u32": 3
+                        "vec": [
+                          {
+                            "string": "red"
+                          },
+                          {
+                            "string": "blue"
+                          },
+                          {
+                            "string": "green"
+                          }
+                        ]
                       }
                     },
                     {
