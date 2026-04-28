@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, String,
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, String,
 };
 
 #[contracterror]
@@ -20,6 +20,7 @@ pub enum Error {
     NoVoteFound = 10,
     InvalidNumOptions = 11,
     WindowMustBePositive = 12,
+    NotInitialized = 13,
 }
 
 #[contracttype]
@@ -55,6 +56,7 @@ pub struct Vote {
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
+    Token,
     PollCount,
     Poll(u32),
     Tally(u32, u32),
@@ -74,11 +76,23 @@ fn isqrt(n: u128) -> u128 {
     x
 }
 
+fn token_addr(env: &Env) -> Result<Address, Error> {
+    env.storage()
+        .instance()
+        .get(&DataKey::Token)
+        .ok_or(Error::NotInitialized)
+}
+
 #[contract]
 pub struct PollHub;
 
 #[contractimpl]
 impl PollHub {
+    pub fn __constructor(env: Env, token: Address) {
+        env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::PollCount, &0u32);
+    }
+
     pub fn create_poll(
         env: Env,
         creator: Address,
@@ -151,6 +165,11 @@ impl PollHub {
         if env.storage().persistent().has(&vote_key) {
             return Err(Error::AlreadyVoted);
         }
+
+        // pull stake into escrow before recording any state
+        let token_id = token_addr(&env)?;
+        let t = token::Client::new(&env, &token_id);
+        t.transfer(&voter, &env.current_contract_address(), &stake);
 
         let weight = isqrt(stake as u128);
         let vote = Vote {
@@ -249,8 +268,14 @@ impl PollHub {
         if vote.released {
             return Err(Error::AlreadyReleased);
         }
-        vote.released = true;
+
         let stake = vote.stake;
+        // push the stake back to the voter from escrow
+        let token_id = token_addr(&env)?;
+        let t = token::Client::new(&env, &token_id);
+        t.transfer(&env.current_contract_address(), &voter, &stake);
+
+        vote.released = true;
         env.storage().persistent().set(&vote_key, &vote);
 
         env.events().publish(
@@ -286,6 +311,10 @@ impl PollHub {
         env.storage()
             .persistent()
             .get(&DataKey::Vote(poll_id, voter))
+    }
+
+    pub fn token_contract(env: Env) -> Result<Address, Error> {
+        token_addr(&env)
     }
 }
 

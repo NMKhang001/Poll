@@ -56,6 +56,13 @@ if [ "$USES_TOKEN" -eq 1 ]; then
   echo "    -> $RECEIPT"
 fi
 
+echo "==> resolving native XLM stellar asset contract"
+# deploy is a no-op when the SAC is already installed on the network
+stellar contract asset deploy --asset native --network "$NETWORK" --source-account "$SOURCE" >/dev/null 2>&1 || true
+XLM=$(stellar contract id asset --asset native --network "$NETWORK")
+[[ "$XLM" =~ ^C[A-Z0-9]{55}$ ]] || { echo "could not resolve native XLM SAC: $XLM"; exit 1; }
+echo "    -> $XLM"
+
 echo "==> building main"
 stellar contract build --manifest-path contract/main/Cargo.toml >/dev/null
 MAIN_WASM=contract/target/wasm32v1-none/release/main_contract.wasm
@@ -66,13 +73,14 @@ if [ "$USES_TOKEN" -eq 1 ]; then
     --wasm "$MAIN_WASM" \
     --source "$SOURCE" \
     --network "$NETWORK" \
-    -- --receipt "$RECEIPT" \
+    -- --receipt "$RECEIPT" --token "$XLM" \
     2>&1 | tail -1)
 else
   MAIN=$(stellar contract deploy \
     --wasm "$MAIN_WASM" \
     --source "$SOURCE" \
     --network "$NETWORK" \
+    -- --token "$XLM" \
     2>&1 | tail -1)
 fi
 [[ "$MAIN" =~ ^C[A-Z0-9]{55}$ ]] || { echo "main deploy failed: $MAIN"; exit 1; }
@@ -98,3 +106,4 @@ echo "main:    https://stellar.expert/explorer/testnet/contract/$MAIN"
 if [ "$USES_TOKEN" -eq 1 ]; then
   echo "token:   https://stellar.expert/explorer/testnet/contract/$RECEIPT"
 fi
+echo "xlm SAC: https://stellar.expert/explorer/testnet/contract/$XLM"

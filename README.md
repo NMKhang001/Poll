@@ -4,7 +4,7 @@ Quadratic polls on Stellar Testnet, where small voters can outweigh whales.
 
 Stake Belt runs stake-weighted polls on Soroban with quadratic vote math, so doubling your stake gives you only about 1.41x more voice. Stakes lock for the voting window, anyone can finalize once the deadline passes, and voters auto-release their own stake on chain.
 
-[![CI](https://github.com/LongPQBL/03-poll/actions/workflows/ci.yml/badge.svg)](https://github.com/LongPQBL/03-poll/actions/workflows/ci.yml)
+[![CI](https://github.com/NMKhang001/03-poll/actions/workflows/ci.yml/badge.svg)](https://github.com/NMKhang001/03-poll/actions/workflows/ci.yml)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B3FFA)
 [Live Demo](https://stake-belt.vercel.app)
 
@@ -20,7 +20,8 @@ Stake Belt runs stake-weighted polls on Soroban with quadratic vote math, so dou
 
 - Live demo: https://stake-belt.vercel.app
 - Demo video: https://youtu.be/REPLACE_ME
-- Main contract on Stellar Expert: https://stellar.expert/explorer/testnet/contract/CAMGL7PZHEFP5ZI5MMHDEWMQLXED24VENFJZ4DAJWO6UTJSOHYCDSTOE
+- Main contract on Stellar Expert: https://stellar.expert/explorer/testnet/contract/CCKCNLTNPRBQAU564NTTQTPYGJNBYUAB33H6X7D2TL2W5LPFYLXIHWDK
+- Native XLM SAC: https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC (testnet built-in)
 
 ## How It Works
 
@@ -79,5 +80,5 @@ npm run dev                               # http://localhost:3002
 
 - Stake amounts are in i128 stroops; the UI converts from XLM with 7 decimals.
 - The contract caps options at 6 to keep the finalize loop short and tally storage cheap.
-- Stake release is a logical state transition; in this demo the actual XLM is held in the voter's wallet during the lock and a Horizon refund happens off-chain. The on-chain `release` event is the canonical record.
+- Stakes really lock on chain. `cast_vote` pulls XLM into the contract via the native Stellar Asset Contract; `release_stake` pushes it back out after `finalize`. The Soroban host auto-authorizes the contract as `from` on the release transfer, so no extra auth dance is needed.
 - Glassmorphism palette is intentional. The continuous tally fills read better against blurred translucent panels than against flat surfaces.
